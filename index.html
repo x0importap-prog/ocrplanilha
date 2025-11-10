@@ -137,29 +137,34 @@ Versão 2.1: Envio direto para Google Sheets via API oficial (OAuth2) com seleç
     });
 
     readBtn.addEventListener('click', async () => {
-      if (!lastImageDataUrl) {
-        alert('Escolha uma imagem primeiro.');
-        return;
-      }
-      readBtn.disabled = true;
-      readBtn.textContent = 'Lendo...';
-      ocrResult.value = '';
-      try {
-        const worker = Tesseract.createWorker({ logger: m => console.log(m) });
-        await worker.load();
-        await worker.loadLanguage('por+eng');
-        await worker.initialize('por+eng');
-        const res = await worker.recognize(lastImageDataUrl);
-        ocrResult.value = res.data.text;
-        await worker.terminate();
-        sendBtn.disabled = false;
-      } catch (err) {
-        alert('Erro no OCR: ' + err.message);
-      } finally {
-        readBtn.disabled = false;
-        readBtn.textContent = 'Ler texto';
-      }
+  if (!lastImageDataUrl) {
+    alert('Escolha uma imagem primeiro.');
+    return;
+  }
+
+  readBtn.disabled = true;
+  readBtn.textContent = 'Lendo...';
+  ocrResult.value = '';
+
+  try {
+    const { createWorker } = Tesseract;
+    const worker = await createWorker('por+eng', 1, {
+      logger: m => console.log(m)
     });
+
+    const res = await worker.recognize(lastImageDataUrl);
+    ocrResult.value = res.data.text;
+    await worker.terminate();
+
+    sendBtn.disabled = false;
+  } catch (err) {
+    alert('Erro no OCR: ' + err.message);
+    console.error(err);
+  } finally {
+    readBtn.disabled = false;
+    readBtn.textContent = 'Ler texto';
+  }
+});
 
     // Envio para planilha
     sendBtn.addEventListener('click', async () => {
